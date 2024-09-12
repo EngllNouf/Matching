@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/ViewTransport.css"> <!--For simple style (nav)-->
+    <title>Company Details</title>
+    <style>
+        /* Add any necessary styles here */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+        .show {
+            display: block; /* Show the modal */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Transportation Company</h1>
+        <p>Choose your ideal transportation partner</p>
+        <div class="grid" id="companyGrid">
+            <!-- Data will be added here by JavaScript -->
+        </div>
+        <div class="navigation">
+            <button class="nav-btn" id="prevBtn"><i class="fas fa-arrow-left"></i> Previous</button>
+            <button class="nav-btn" id="nextBtn">Next <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Terms and Conditions</h2>
+            <p>By agreeing to these terms, you acknowledge that you have read, understood, and agree to be bound by the following terms and conditions:</p>
+            <p>1. The selected transportation company will be responsible for the safe delivery of your goods.</p>
+            <p>2. Delivery times are estimates and may vary based on unforeseen circumstances.</p>
+            <p>3. You agree to provide accurate information for shipping and receiving of goods.</p>
+            <p>4. Any damages or losses will be handled according to the company's specific policies.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn disagree-btn">Disagree</button>
+                <button class="modal-btn agree-btn">Agree</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        fetch('/api/company-details')
+        .then(response => response.json())
+        .then(data => {
+            const grid = document.getElementById('companyGrid');
+            grid.innerHTML = ''; // Clear previous content
+
+            // Show only the first three cards
+            const companiesToShow = data.slice(0, 3);
+            companiesToShow.forEach((company, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+
+                card.innerHTML = `
+                    ${index === 0 ? '<span class="best-match">Best Match</span>' : ''}
+                    <div class="company-name">${company.company_name}</div>
+                    <div class="stars">${'★'.repeat(Math.floor(company.rating))}${'☆'.repeat(5 - Math.floor(company.rating))}</div>
+                    <div class="description">${company.description}</div>
+                    <div class="delivery-time">
+                        <i class="fas fa-clock"></i> Delivery will take <strong>${company.delivery_days} days</strong>
+                    </div>
+                    <button class="select-btn">Choose Now</button>
+                `;
+
+                grid.appendChild(card);
+
+                // Add event listener for the "Choose Now" button
+                card.querySelector('.select-btn').addEventListener('click', () => {
+                    document.getElementById('termsModal').classList.add('show');
+                });
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script>
+        // GSAP animations
+        gsap.from('.card', {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            stagger: 0.2,
+            ease: 'power3.out'
+        });
+
+        gsap.from('h1, p', {
+            duration: 1,
+            y: -30,
+            opacity: 0,
+            stagger: 0.2,
+            ease: 'power3.out'
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                gsap.to(this, {
+                    duration: 0.1,
+                    scale: 0.95,
+                    yoyo: true,
+                    repeat: 1
+                });
+            });
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('termsModal');
+        const closeModal = document.querySelector('.close-modal');
+        const agreeBtn = document.querySelector('.agree-btn');
+        const disagreeBtn = document.querySelector('.disagree-btn');
+
+        closeModal.addEventListener('click', () => {
+            modal.classList.remove('show');
+        });
+
+        agreeBtn.addEventListener('click', () => {
+            alert('Thank you for agreeing to the terms and conditions!');
+            modal.classList.remove('show');
+        });
+
+        disagreeBtn.addEventListener('click', () => {
+            alert('You must agree to the terms and conditions to proceed.');
+            modal.classList.remove('show');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target == modal) {
+                modal.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
